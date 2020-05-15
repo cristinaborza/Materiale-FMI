@@ -1,0 +1,33 @@
+S -> aAbC | dB | lambda
+A -> bA | lambda
+C -> lambda
+B -> c | d
+F -> A | lambda | BC
+
+// scot starile inaccesibile
+S -> aAbC | dB | lambda
+A -> bA | lambda
+C -> lambda
+B -> c | d
+
+//scot lambda productiile
+S -> aAb | ab | dB
+A -> bA | b
+B -> c | d
+
+//mai multe netrminale
+X1 -> a
+X2 -> b
+X3 -> d
+S -> X1AX2 | X1X2 | X3B
+A -> X2A | b
+B -> c | d
+
+//forma finala
+X1 -> a
+X2 -> b
+X3 -> d
+Y1 -> X1A
+S -> Y1X2 | X1X2 | X3B
+A -> X2A | b
+B -> c | d
