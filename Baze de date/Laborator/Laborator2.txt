@@ -1,0 +1,68 @@
+--13
+SELECT last_name, NVL(TO_CHAR(commission_pct), 'Fara comision')
+FROM employees;
+
+--14
+SELECT last_name, salary + salary * NVL(commission_pct, 0) as Venit
+FROM employees
+WHERE salary + salary * NVL(commission_pct, 0) > 10000;
+
+--15
+SELECT last_name, job_id, salary, salary + salary * DECODE(job_id, 'IT_PROG', 10, 'ST_CLERK', 15, 'SA_REP', 20, 0)/ 100 "Salariu negociat"
+FROM employees;
+
+--16
+SELECT employee_id, d.department_id, department_name
+FROM employees e JOIN departments d ON (d.department_id = e.department_id);
+
+--17
+SELECT DISTINCT e.job_id, job_title, department_id 
+FROM jobs j JOIN employees e ON (j.job_id = e.job_id)
+WHERE department_id = 30;
+
+--18
+SELECT last_name, department_name, location_id, commission_pct
+FROM employees e LEFT JOIN departments d ON (d.department_id = e.department_id)
+WHERE commission_pct IS NOT NULL;
+
+--19
+SELECT last_name, job_title, department_name
+FROM jobs j JOIN employees e ON (j.job_id = e.job_id)
+            JOIN departments d ON (e.department_id = d.department_id)
+            JOIN locations l ON (l.location_id = d.location_id)
+WHERE UPPER(city) = 'OXFORD';
+
+--21
+SELECT e.employee_id Ang#, e.last_name Angajat, m.last_name Manager, m.employee_id Mng#
+FROM employees e LEFT JOIN employees m ON (e.manager_id = m.employee_id);
+
+
+--22 Scrieţi o cerere care afişează numele angajatului, codul departamentului în care
+--acesta lucrează şi numele colegilor săi de departament. Se vor eticheta coloanele
+--corespunzător.
+
+SELECT ang.last_name Angajat, ang.department_id Dep#, coleg.last_name "Nume coleg"
+FROM employees ang JOIN employees coleg ON (ang.department_id = coleg.department_id)
+WHERE ang.employee_id != coleg.employee_id;
+
+
+
+--24.Să se afişeze numele şi data angajării pentru salariaţii care au fost angajaţi după Gates
+SELECT e.last_name, e.hire_date
+FROM employees e, employees gates  
+WHERE e.hire_date > gates.hire_date AND INITCAP(gates.last_name) = 'Gates';
+
+SELECT last_name, hire_date
+FROM employees
+WHERE hire_date > (SELECT hire_date 
+                    FROM employees
+                    WHERE INITCAP(last_name) = 'Gates');
+
+
+--25. Să se afişeze numele salariatului şi data angajării împreună cu numele şi data angajării
+--şefului direct pentru salariaţii care au fost angajaţi înaintea şefilor lor. Se vor eticheta
+--coloanele Angajat, Data_ang, Manager si Data_mgr.
+
+SELECT ang.last_name, ang.hire_date, m.last_name, m.hire_date
+FROM employees ang JOIN employees m ON (ang.manager_id = m.employee_id)
+WHERE ang.hire_date < m.hire_date;

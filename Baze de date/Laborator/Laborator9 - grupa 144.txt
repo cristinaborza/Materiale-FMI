@@ -1,0 +1,235 @@
+﻿-- LABORATOR 6
+
+
+desc project;
+
+
+select * from project;
+
+
+desc works_on;
+
+
+select * from works_on;
+
+
+--Exemplu: Să se obţină codurile salariaţilor ataşaţi tuturor proiectelor 
+--pentru care s-a alocat un buget egal cu 10000.
+
+
+--Metoda 1 (utilizând de 2 ori NOT EXISTS):
+SELECT DISTINCT employee_id
+FROM works_on a
+WHERE NOT EXISTS
+        (SELECT 1
+         FROM project p
+         WHERE budget = 10000
+         AND NOT EXISTS  -- t1
+            (SELECT 'x'
+             FROM works_on b
+             WHERE p.project_id = b.project_id
+             AND b.employee_id = a.employee_id
+            ) -- proiectele la care angajatul curent lucreaza  -- t2
+         ); -- t3
+t1 not exists t2 -> obtinem angajatii care lucreaza la proiecte cu buget diferit de 10k       
+in final se obtine t3 -> obtinem exact angajatii care lucreaza la TOATE proiectele cu buget de 10k
+
+
+--Exemplu: Să se obţină codurile salariaţilor ataşaţi TUTUROR proiectelor 
+--pentru care s-a alocat un buget egal cu 10000.    
+        
+select * from project;  -> p2 si p3 au un buget de 10k
+
+
+select * from works_on; -> angajatii care lucreaza la TOATE proiectele cu buget de 10k (p2, p3)
+           -> 145, 101, 148, 200
+        
+        
+--Metoda 2 (simularea diviziunii cu ajutorul funcţiei COUNT):
+SELECT employee_id
+FROM works_on -- angajati care lucreaza la proiecte
+WHERE project_id IN -- selectam angajatii care lucreaza la proiecte cu buget de 10k
+                    -- (la toate proiectele cu buget de 10k sau doar la o parte din ele)
+            (SELECT project_id
+             FROM project
+             WHERE budget = 10000
+            ) -- subcerere pentru a determina proiectele care au buget de 10k
+GROUP BY employee_id  -- grupa dupa id-ul angajatului deoarece vrem sa numaram proiectele la care
+                      -- lucreaza fiecare angajat
+HAVING COUNT(project_id)=  -- daca nr de proiecte la care lucreaza angajatul este egal cu nr de proiecte
+                        -- cu buget de 10k => angajatul lucreaza la TOATE proiectele cu buget de 10k
+            (SELECT COUNT(*)
+             FROM project
+             WHERE budget = 10000
+             );
+
+
+--Exemplu: Să se obţină codurile salariaţilor ataşaţi TUTUROR proiectelor 
+--pentru care s-a alocat un buget egal cu 10000.    
+        
+select * from project;  -> p2 si p3 au un buget de 10k
+
+
+select * from works_on; -> angajatii care lucreaza la TOATE proiectele cu buget de 10k (p2, p3)
+           -> 145, 101, 148, 200
+           
+--Metoda 3 (operatorul MINUS):
+SELECT employee_id
+FROM works_on  -- angajatii care lucreaza la proiecte
+
+
+MINUS -- eliminam angajatii care lucreaza la proiecte cu buget DIFERIT de 10k
+      -- sau lucreaza doar la o parte din proiectele cu buget de 10k
+      -- pentru a obtine exact angajatii care lucreaza la TOATE proiectele cu buget egal cu 10k
+
+
+SELECT employee_id from
+    ( SELECT employee_id, project_id
+      FROM (SELECT DISTINCT employee_id FROM works_on) t1, -- produs cartezian
+           (SELECT project_id FROM project WHERE budget = 10000) t2
+           
+      MINUS
+      
+      SELECT employee_id, project_id FROM works_on
+    ) t3;
+
+
+148 (lucreaza la p2 si p3) - datele din baza de date
+176 (lucreaza doar la p3)
+
+
+produsul cartezian t1 cu t2 => 148 - p2 / 148 - p3
+                               176 - p2 / 176 - p3
+
+
+--t3 o sa obtina angajatii care lucreaza la proiecte cu buget diferit de 10k 
+--sau doar la o parte din proiectele cu buget de 10k
+
+
+
+
+
+
+--Metoda 4 (A include B => B\A = Ø):
+SELECT DISTINCT employee_id
+FROM works_on a -- lista tuturor ang care lucreaza la proiecte
+WHERE NOT EXISTS 
+        (
+            (SELECT project_id
+             FROM project p
+             WHERE budget = 10000  -- proiectele cu buget de 10k -> p2 si p3
+             )  
+            
+            MINUS 
+            
+            (SELECT p.project_id
+             FROM project p, works_on b
+             WHERE p.project_id = b.project_id
+             AND b.employee_id = a.employee_id  
+            ) -- proiecte la care angajatul curent lucreaza 
+             -- procesul este la fel ca cel din metoda 3
+        -- dupa aplicarea operatorului MINUS se obtine o lista cu angajatii care lucreaza 
+        -- la proiecte cu buget diferit de 10k sau doar la o parte din proiectele 
+        -- cu buget de 10k
+        );
+-- in final o sa obtinem exact angajatii care lucreaza la TOATE proiectele cu buget de 10k
+
+
+
+
+angajati - lucreaza - proiecte
+
+
+proiectele - au - buget
+
+
+1. Să se listeze informaţii despre angajaţii care au lucrat în TOATE proiectele 
+demarate în primele 6 luni ale anului 2006.
+
+
+select * from project;
+select * from works_on;
+
+
+select last_name, first_name, employee_id
+from employees
+where employee_id IN
+            (select employee_id
+             from works_on
+             where project_id IN (select project_id
+                                  from project
+                                  where start_date >= to_date('01-jan-06')
+                                        and start_date <= to_date('30-jun-06')
+                                  ) -- daca oprim rezolvarea in acest punct => o sa afiseze angajatii
+                                  -- care lucreaza la toate sau doar la o parte din proiectele
+                                  -- demarate in primele 6 luni
+             group by employee_id
+             having count(project_id) = (select count(project_id)
+                                         from project
+                                         where start_date >= to_date('01-jan-06')
+                                               and start_date <= to_date('30-jun-06')
+                                         ) -- dupa grupare putem numara proiectele asociate fiecarui angajat
+                                         -- incat sa afisam doar ang care lucreaza la TOATE proiectele
+                                         -- demarate in primele 6 luni
+            );
+
+
+
+
+
+
+2. Să se listeze informaţii despre proiectele la care au participat toţi angajaţii 
+care au deţinut alte 2 posturi în firmă.
+
+
+select *
+from project -- lista tuturor proiectelor
+where project_id in (select project_id
+                     from works_on
+                     where employee_id in 
+                            (select employee_id
+                             from job_history
+                             group by employee_id
+                             having count(job_id) = 2
+                             ) --angajaţii care au deţinut alte 2 posturi în firmă (101, 176, 200)
+                     group by project_id -- grupand putem determina cati angajati sunt pentru acelasi proiect
+                                -- si acest numar de angajati trebuie sa fie egal cu nr de ang care au 
+                                -- detinut alte doua posturi in firma
+                     having count(*) = ( select count(count(employee_id))
+                                         from job_history
+                                         group by employee_id
+                                         having count(job_id) = 2
+                                       )
+                    );
+
+
+select * from works_on;
+
+
+
+
+3. Să se obţină numărul de angajaţi care au avut cel puţin trei job-uri, 
+luându-se în considerare şi job-ul curent.
+
+
+-- acest lucru inseamna cel putin doua joburi in job_history
+
+
+select count(count(employee_id)) NrAng
+from job_history
+group by employee_id
+having count(job_id) >= 2;
+
+
+4. Pentru fiecare ţară, să se afişeze numărul de angajaţi din cadrul acesteia.
+
+
+select count(employee_id) NrAng
+from employees join departments using (department_id)
+               join locations using (location_id)
+               right join countries using (country_id)
+group by country_id;
+
+
+Tema: Laborator 6 - ex: 5, 6, 7, 
+Deadline 25.04 (sambata - inclusiv)

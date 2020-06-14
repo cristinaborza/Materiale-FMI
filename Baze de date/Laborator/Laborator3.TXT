@@ -1,0 +1,133 @@
+--6. Se cer codurile departamentelor al căror nume conţine şirul “re” sau în care
+--lucrează angajaţi având codul job-ului “SA_REP”.
+
+SELECT department_id
+FROM departments 
+WHERE LOWER(department_name) LIKE '%re%'
+
+UNION
+
+SELECT DISTINCT department_id
+FROM employees
+WHERE UPPER(job_id) = 'SA_REP' AND department_id IS NOT NULL;
+
+--8.Să se obțină codurile departamentelor în care nu lucreaza nimeni (nu este introdus
+--nici un salariat în tabelul employees). Se cer două soluţii
+
+--v1
+SELECT department_id
+FROM departments
+
+MINUS
+
+SELECT department_id
+FROM employees 
+WHERE department_id IS NOT NULL;
+
+
+--v2
+SELECT department_id
+FROM departments
+WHERE department_id NOT IN (SELECT department_id
+                            FROM employees
+                            WHERE department_id IS NOT NULL)
+ORDER BY 1;
+
+--9. Se cer codurile departamentelor al căror nume conţine şirul “re” şi în care lucrează
+--angajaţi având codul job-ului “HR_REP”.
+
+SELECT department_id 
+FROM departments
+WHERE LOWER(department_name) LIKE '%re%'
+INTERSECT
+SELECT NVL(department_id, 0)
+FROM employees
+WHERE UPPER(job_id) = 'HR_REP';
+
+
+--10. Folosind subcereri, să se afişeze numele şi data angajării pentru salariaţii care au
+--fost angajaţi după Gates.
+
+SELECT last_name, hire_date
+FROM employees
+WHERE hire_date >  (SELECT hire_date
+                    FROM employees
+                    WHERE INITCAP(last_name) = 'Gates');
+                    
+--11. Folosind subcereri, scrieţi o cerere pentru a afişa numele şi salariul pentru toţi
+--colegii (din acelaşi departament) lui Gates. Se va exclude Gates.
+
+SELECT last_name, salary, department_id
+FROM employees 
+WHERE department_id IN (SELECT department_id
+                       FROM employees
+                       WHERE INITCAP(last_name) = 'Gates');
+
+
+--12. Folosind subcereri, să se afişeze numele şi salariul angajaţilor conduşi direct de
+--preşedintele companiei (acesta este considerat angajatul care nu are manager).
+
+SELECT last_name, salary
+FROM employees 
+WHERE manager_id = (SELECT employee_id
+                    FROM employees
+                    WHERE manager_id IS NULL);
+
+--13. Scrieți o cerere pentru a afişa numele, codul departamentului și salariul
+--angajaților al căror cod de departament și salariu coincid cu codul departamentului și
+--salariul unui angajat care câștigă comision.
+
+SELECT last_name, department_id, salary
+FROM employees
+WHERE (department_id, salary) IN (SELECT department_id, salary
+                                  FROM employees
+                                  WHERE commission_pct IS NOT NULL)
+ORDER BY 1;
+
+--14. Să se afișeze codul, numele și salariul tuturor angajaților al căror salariu este mai
+--mare decât salariul mediu
+
+SELECT employee_id, last_name, salary
+FROM employees 
+WHERE salary > (SELECT ROUND(AVG(salary))
+                FROM employees);
+
+--15. Scrieti o cerere pentru a afișa angajații care câștigă (salariul plus comision) mai mult
+--decât oricare funcționar (job-ul conţine şirul “CLERK”). Sortați rezultatele dupa salariu,
+--în ordine descrescătoare.
+
+SELECT last_name, salary
+FROM employees
+WHERE salary + salary * NVL(commission_pct, 0) > (SELECT MAX(salary + salary * NVL(commission_pct, 0))
+                                                  FROM employees
+                                                  WHERE UPPER(job_id) LIKE '%CLERK%')
+ORDER BY salary DESC;
+
+--16. Scrieţi o cerere pentru a afişa numele angajatilor, numele departamentului şi
+--salariul angajaţilor care nu câştigă comision, dar al căror şef direct câştigă comision.
+
+SELECT employee_id, last_name, department_name, salary
+FROM employees e JOIN departments d ON (e.department_id = d.department_id)
+WHERE e.commission_pct IS NULL AND (SELECT commission_pct
+                                    FROM employees sef
+                                    WHERE sef.employee_id = e.manager_id) IS NOT NULL;
+
+--17. Să se afișeze numele angajatilor, departamentul, salariul şi job-ul tuturor
+--angajaților al căror salariu și comision coincid cu salariul și comisionul unui angajat din
+--Oxford.
+
+SELECT last_name, department_id, salary, job_id
+FROM employees 
+WHERE (salary, NVL(commission_pct, 0)) IN (SELECT salary, NVL(commission_pct, 0)
+                                           FROM employees e JOIN departments d ON (d.department_id = e.department_id)
+                                                            JOIN locations l ON (d.location_id = l.location_id)
+                                           WHERE INITCAP(city) = 'Oxford');
+
+
+--18. Să se afişeze numele angajaţilor, codul departamentului şi codul job-ului
+--salariaţilor al căror departament se află în Toronto.
+
+SELECT last_name, e.department_id, job_id
+FROM employees e JOIN departments d ON (e.department_id = d.department_id)
+                 JOIN locations l ON (d.location_id = l.location_id)
+WHERE INITCAP(city) = 'Toronto';

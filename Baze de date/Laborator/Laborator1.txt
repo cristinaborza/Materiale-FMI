@@ -1,0 +1,121 @@
+--4
+SELECT employee_id, last_name, job_id, hire_date 
+FROM employees;
+
+--5
+SELECT job_id 
+FROM employees;
+
+SELECT DISTINCT job_id
+FROM employees;
+
+SELECT UNIQUE job_id
+FROM employees;
+
+--6
+-- '' - pt comentarii
+-- "" - pt alias
+SELECT last_name || ', ' || job_id  as "Angajat si titlu"
+FROM employees;
+
+DESC employees;
+
+SELECT EMPLOYEE_ID || ', ' || FIRST_NAME || ', ' || LAST_NAME || ', ' || EMAIL || ', ' || PHONE_NUMBER || ', ' || HIRE_DATE || ', ' || JOB_ID || ', ' || salary || ', ' || COMMISSION_PCT || ', ' || manager_id  || ', ' || department_id as "Informatii complete"
+FROM employees;
+
+--7
+SELECT last_name, salary
+FROM employees
+WHERE salary > 2850
+ORDER BY 2 DESC;
+
+--8
+SELECT last_name, department_id 
+FROM employees
+WHERE employee_id = 104;
+
+--9
+SELECT last_name, salary
+FROM employees
+WHERE salary < 1500 OR salary > 2850
+ORDER BY 2 DESC;
+
+SELECT last_name, salary
+FROM employees
+WHERE salary NOT BETWEEN 1500 AND 2850;
+
+--9.1
+SELECT last_name, first_name, salary
+FROM employees 
+WHERE salary BETWEEN 3000 AND 7000
+ORDER BY 3;
+
+--9.2
+SELECT last_name, first_name, salary
+FROM employees 
+WHERE salary >= 3000 AND salary <= 7000
+ORDER BY 3;
+
+--10
+SELECT first_name, last_name, hire_date
+FROM employees
+WHERE hire_date BETWEEN '20-FEB-87' AND '01-MAY-89'
+ORDER BY 3;
+
+--11
+SELECT last_name, department_id
+FROM employees
+WHERE department_id IN (10, 30) 
+ORDER BY 1 asc;
+
+--12
+SELECT last_name "Angajat", salary "Salariu lunar"
+FROM employees
+WHERE department_id IN (10, 30) AND salary > 1500
+ORDER BY 1 ASC;
+
+--13 
+SELECT to_char(SYSDATE, 'MM-DD-YYYY')
+FROM dual;
+
+--14
+SELECT last_name, hire_date
+FROM employees
+WHERE TO_CHAR(hire_date, 'YYYY') = 1987;
+
+SELECT last_name, hire_date
+FROM employees
+WHERE hire_date LIKE '%87%';
+
+--15
+SELECT last_name, job_id
+FROM employees
+WHERE manager_id IS NOT NULL;
+
+--16
+SELECT last_name, salary, commission_pct
+FROM employees 
+WHERE commission_pct IS NOT NULL
+ORDER BY 2 DESC, 3 DESC;
+
+--17
+SELECT last_name, salary, commission_pct
+FROM employees 
+ORDER BY 2 DESC, 3;
+
+--18
+SELECT last_name
+FROM employees
+WHERE LOWER(last_name) LIKE '__a%';
+
+--19
+SELECT last_name, department_id, manager_id
+FROM employees
+WHERE upper(last_name) LIKE '%L%L%' AND 
+        (department_id = 30 OR manager_id = 102);
+        
+--20
+SELECT last_name, job_id, salary
+FROM employees 
+WHERE job_id LIKE '%CLERK%' OR job_id LIKE '%REP%' AND
+        salary NOT IN (1000, 2000, 3000);

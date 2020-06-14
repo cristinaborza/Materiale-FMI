@@ -1,0 +1,41 @@
+Laborator 4 -> 8
+
+select employee_id, last_name 
+from employees 
+where salary > (select avg(salary)
+                from employees)
+order by salary desc;
+
+
+Laborator 4 -> 10
+
+select d.department_id, department_name, max(salary)
+from employees e join departments d on (d.department_id = e.department_id)
+group by d.department_id, department_name
+having max(salary) > 3000;
+
+Laborator 4 -> 12
+
+select max(avg(salary))
+from employees 
+group by department_id;
+
+
+Laborator 4 -> 13
+
+select j.job_id, j.job_title, avg(salary)
+from employees e join jobs j on (j.job_id = e.job_id)
+group by j.job_id, j.job_title
+having avg(salary) =    (select min(avg(salary))
+                         from employees 
+                         group by job_id);
+
+
+Laborator 4 -> 14
+
+select avg (salary)
+from employees
+having avg(salary) > 2500;
+
+
+

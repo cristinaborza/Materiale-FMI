@@ -1,0 +1,84 @@
+5.Să se afişeze codul, numele şi prenumele angajaţilor care au cel puţin doi subalterni.
+
+SELECT employee_id, first_name, last_name
+FROM employees e1
+WHERE  (SELECT count(*)
+        FROM employees e2
+        GROUP BY manager_id
+        HAVING e2.manager_id = e1.employee_id
+        ) > 2;
+        
+
+
+
+9. Să se afişeze codul, prenumele, numele şi data angajării, pentru angajatii condusi de Steven King care au cea mai mare vechime dintre subordonatii lui Steven King. Rezultatul nu va conţine
+angajaţii din anul 1970;
+
+WITH val_id AS (SELECT employee_id
+                FROM employees
+                WHERE last_name = 'King' AND first_name = 'Steven')
+
+SELECT employee_id, first_name, last_name, hire_date 
+FROM employees
+WHERE manager_id = (select * from val_id) AND hire_date =  (SELECT min(hire_date)
+                                                            FROM employees
+                                                            WHERE manager_id = (select * from val_id)
+                                                            GROUP BY manager_id
+                                                            );
+                                                            
+                                                            
+
+10. Să se determine primii 10 cei mai bine plătiţi angajaţi.
+
+SELECT last_name, salary, rownum
+FROM   (SELECT last_name, salary
+        FROM employees
+        ORDER BY salary desc
+        )
+WHERE rownum <= 10;
+
+11. Să se afişeze informaţii despre departamente, în formatul următor: „Departamentul <department_name> este condus de {<manager_id> | nimeni} şi {are numărul de salariaţi <n> | nu are salariati}“.
+
+
+SELECT 'Departamentul ' || department_name || ' este condus de ' || nvl(to_char(manager_id), 'nimeni') || ' si ' || DECODE ((SELECT COUNT(*)
+                                                                                                                             FROM employees
+                                                                                                                             WHERE department_id = d.department_id  
+                                                                                                                             ), 0, 'nu are angajati', 'are numarul de angajati '  || (SELECT COUNT(*)
+                                                                                                                                                                                      FROM employees
+                                                                                                                                                                                      WHERE department_id = d.department_id  
+                                                                                                                                                                                     )
+                                                                                                                            )
+FROM departments d;
+
+
+12. Să se afişeze numele, prenumele angajaţilor şi lungimea numelui pentru înregistrările în care aceasta este diferită de lungimea prenumelui
+
+SELECT last_name, first_name, NULLIF (LENGTH(last_name), LENGTH(first_name))
+FROM employees;
+
+
+14. Să se afişeze:
+a suma salariilor, pentru job-urile care incep cu litera S;
+b media generala a salariilor, pentru job-ul avand salariul maxim;
+c salariul minim, pentru fiecare din celelalte job-uri.
+
+SELECT  job_title,job_id, 
+CASE 
+    WHEN UPPER(SUBSTR(job_title, 1, 1)) = 'S' THEN (SELECT SUM(salary)
+                                                    FROM employees e
+                                                    WHERE e.job_id = j.job_id)
+    WHEN job_id IN (SELECT job_id
+                    FROM employees 
+                    WHERE salary = (SELECT MAX(salary)
+                                    FROM employees
+                                   )
+                    ) THEN (SELECT ROUND(AVG(salary))
+                            FROM employees
+                            )
+    ELSE (SELECT MIN(salary)
+          FROM employees e
+          WHERE e.job_id = j.job_id
+          )
+END "Raspuns"
+FROM jobs j;
+
