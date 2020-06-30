@@ -1,0 +1,102 @@
+.data 
+	str:.asciiz "ABCDZ"
+	vocale:.asciiz "AEIOUY"
+	ch:.byte 'Z'
+.text
+main:
+	lb $t0, ch
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	la $t0, str
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	jal strchr_cons
+	addu $sp, 8
+	
+	move $a0, $v0
+	li $v0, 1
+	syscall
+
+	li $v0, 10
+	syscall
+strchr_cons:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+				#$sp:($fpv)$fp:($str)($ch)	
+	subu $sp, 4
+	sw $ra, 0($sp)
+				#$sp:($rav)($fpv)$fp:($str)($ch)
+	subu $sp, 4
+	sw $s0, 0($sp)
+	subu $sp, 4
+	sw $s1, 0($sp)
+				#$sp:($s1v)($s0v)($rav)($fpv)$fp:($str)($ch)
+	lw $s0, 0($fp) #str
+	lb $s1, 4($fp) #ch
+
+	lb $t0, 0($s0)
+	li $v0, -1
+	li $t3, 0
+loop:
+	beqz $t0, exit
+	beq $t0, $s1, check
+	j cont
+check:
+	addi $s0, $s0, 1
+	lb $t1, 0($s0)
+	addi $s0, $s0, -1
+	
+	subu $sp, 4
+	sw $t1, 0($sp)
+	
+	li $v1, 0
+	jal nu_este_vocala
+
+	beqz $v1, am_gasit
+	j cont
+am_gasit:
+	move $v0, $t3
+	j exit
+cont:
+	addi $s0, $s0, 1
+	addi $t3, $t3, 1
+	lb $t0, 0($s0)
+	j loop
+exit:
+	lw $s1, -16($fp)
+	lw $s0, -12($fp)
+	lw $ra, -8($fp)
+	lw $fp, -4($fp)
+	addu $sp, 16
+	jr $ra
+nu_este_vocala:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+				#$sp:($fpv)$fp:($ch)
+	subu $sp, 4
+	sw $s0, 0($sp)
+				#$sp:($s0v)($fpv)$fp:($ch)
+	lb $s0, 0($fp) #ch
+
+	la $t1, 0
+	lb $t2, vocale($t1)
+loop1:
+	beqz $t2, exit1
+	beq $s0, $t2, e_vocala
+	j cont1
+cont1:
+	addi $t1, $t1, 1
+	lb $t2, vocale($t1)
+	j loop1
+e_vocala:
+	li $v1, 1
+	j exit1
+exit1:
+	lw $s0, -8($fp)
+	lw $fp, -4($fp)
+	addu $sp, 8
+	jr $ra

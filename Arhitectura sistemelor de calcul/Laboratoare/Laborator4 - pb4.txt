@@ -1,0 +1,65 @@
+.data 
+	a:.word 11
+	B:.word 20
+	x:.word 4
+.text
+main:
+	lw $t0, x
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	lw $t0, B
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	lw $t0, a
+	subu $sp, 4
+	sw $t0, 0($sp)
+	
+	jal divizibile_in_interval
+	addu $sp, 12
+
+	move $a0, $v0
+	li $v0, 1
+	syscall
+
+	li $v0, 10
+	syscall
+divizibile_in_interval:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+				#$sp:($fpv)$fp:($a)($b)($x)
+
+	subu $sp, 4
+	sw $s0, 0($sp)
+	subu $sp, 4
+	sw $s1, 0($sp)
+	subu $sp, 4
+	sw $s2, 0($sp)
+				#$sp:($s2v)($s1v)($s0v)($fpv)$fp:($a)($b)($x)
+	
+	lw $s0, 0($fp) #a
+	lw $s1, 4($fp) #b
+	lw $s2, 8($fp) #x
+
+	move $t0, $s0
+	li $v0, 0
+loop:	
+	bgt $t0, $s1, exit
+	rem $t2, $t0, $s2
+	beqz $t2, e_diviz
+	j cont
+cont:
+	addi $t0, $t0, 1
+	j loop
+e_diviz:
+	addi $v0, $v0, 1
+	j cont
+exit:
+	lw $s2, -16($fp)
+	lw $s1, -12($fp)
+	lw $s0, -8($fp)
+	lw $fp, -4($fp)
+	addu $sp, 16
+	jr $ra

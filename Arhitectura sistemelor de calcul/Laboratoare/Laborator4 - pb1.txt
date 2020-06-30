@@ -1,0 +1,49 @@
+.data
+	x:.word 24220
+.text
+main:
+	lw $t0, x
+	subu $sp, 4
+	sw $t0, 0($sp)
+	
+	li $t0, 10
+	li $t3, 2
+
+	jal cifre_pare
+	
+	addu $s0, 4	
+
+	li $v0, 10
+	syscall
+cifre_pare:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+	#sp:($fpv)$fp:($x)
+
+	subu $sp, 4
+	sw $s0, 0($sp)
+	#sp:($s0v)($fpv):$fp($x)
+
+	lw $s0, 0($fp) #x
+loop:
+	beqz $s0, exit
+	rem $t1, $s0, $t0
+	rem $t2, $t1, $t3
+	beqz $t2, afis
+	j cont
+cont:
+	div $s0, $s0, $t0
+	j loop 
+afis:
+	move $a0, $t1
+	li $v0, 1
+	syscall
+
+	j cont
+exit:
+	lw $s0, -8($fp)
+	lw $fp, -4($fp)
+	addu $fp, 8
+	j $ra
+	

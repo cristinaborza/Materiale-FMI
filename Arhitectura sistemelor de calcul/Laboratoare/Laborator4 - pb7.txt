@@ -1,0 +1,88 @@
+.data 
+	str:.asciiz "amessuonny"
+	vocale:.asciiz "aeiouy"
+.text
+main:
+	la $t0, str
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	jal afiseaza_vocale
+	addu $sp, 4
+
+	li $v0, 10
+	syscall
+afiseaza_vocale:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+				#$sp:($fpv)$fp:($str)	
+	subu $sp, 4
+	sw $ra, 0($sp)
+				#$sp:($rav)($fpv)$fp:($str)
+	subu $sp, 4
+	sw $s0, 0($sp)
+				#$sp:($s0v)($rav)($fpv)$fp:($str)
+	lw $s0, 0($fp) #str
+	lb $t0, 0($s0)
+loop:
+	beqz $t0, exit
+		
+	subu $sp, 4
+	sw $t0, 0($sp)
+	
+	li $v0, 1
+	jal este_vocala
+
+	addu $sp, 4
+	beqz $v0, afis
+	j cont
+afis:
+	move $a0, $t0
+	li $v0, 11
+	syscall
+	
+	j cont
+cont:
+	addi $s0, $s0, 1
+	lb $t0, 0($s0)
+	
+	j loop
+exit:
+	lw $s0, -12($fp)
+	lw $ra, -8($fp)
+	lw $fp, -4($fp)
+	addu $sp, 12
+	jr $ra
+este_vocala:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+				#$sp:($fpv)$fp:($ch)
+	subu $sp, 4
+	sw $ra, 0($sp)
+				#$sp:($rav)($fpv)$fp:($ch)
+	subu $sp, 4
+	sw $s0, 0($sp)
+				#$sp:($s0v)($rav)($fpv)$fp:($ch)
+	lb $s0, 0($fp) #ch
+
+	la $t1, 0
+	lb $t2, vocale($t1)
+loop1:
+	beqz $t2, exit1
+	beq $s0, $t2, e_vocala
+	j cont1
+cont1:
+	addi $t1, $t1, 1
+	lb $t2, vocale($t1)
+	j loop1
+e_vocala:
+	li $v0, 0
+	j exit1
+exit1:
+	lw $s0, -12($fp)
+	lw $ra, -8($fp)
+	lw $fp, -4($fp)
+	addu $sp, 12
+	jr $ra

@@ -1,0 +1,134 @@
+.data 
+	v:.word 10, 11, 12, 18
+	n:.word 4
+	m:.word 2
+	p:.word 1
+.text
+main:
+	lw $t0, p
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	lw $t0, m
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	lw $t0, n
+	subu $sp, 4
+	sw $t0, 0($sp)
+	
+	la $t0, v
+	subu $sp, 4
+	sw $t0, 0($sp)
+
+	jal eval
+	addu $sp, 16
+
+	move $a0, $v1
+	li $v0, 1
+	syscall
+
+	li $v0, 10
+	syscall
+eval:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+				#$sp:($fpv)$fp:($v)($n)($m)($p)
+
+	subu $sp, 4
+	sw $ra, 0($sp)
+				#sp:($rav)($fpv)$fp:($v)($n)($m)($p)
+	
+	subu $sp, 4
+	sw $s0, 0($sp)
+	subu $sp, 4
+	sw $s1, 0($sp)
+	subu $sp, 4
+	sw $s2, 0($sp)
+	subu $sp, 4
+	sw $s3, 0($sp)
+				#$sp:($s3v)($s2v)($s1v)($s0v)($rav)($fpv)$fp:($v)($n)($m)($p)
+	
+	lw $s0, 4($fp) #n
+	lw $s1, 0($fp) #v
+	lw $s2, 8($fp) #m
+	lw $s3, 12($fp) #p
+
+	li $t0, 0
+	li $v1, 0
+loop:	
+	bge $t0, $s0, exit
+
+	lw $t1, 0($s1)
+	
+	subu $sp, 4
+	sw $s3, 0($sp)
+	subu $sp, 4
+	sw $s2, 0($sp)	
+	subu $sp, 4
+	sw $t1, 0($sp)
+
+	jal exact_p_desc
+	addu $sp, 12
+	
+	sub $t1, $t1, $s2
+	mul $t1, $t1, $v0
+	add $v1, $v1, $t1
+	
+	addi $s1, 4
+	addi $t0, 1
+	j loop
+exit:
+	lw $s3, -24($fp)
+	lw $s2, -20($fp)
+	lw $s1, -16($fp)
+	lw $s0, -12($fp)
+	lw $ra, -8($fp)
+	lw $fp, -4($fp)
+	addu $sp, 24
+	jr $ra
+exact_p_desc:
+	subu $sp, 4
+	sw $fp, 0($sp)
+	addi $fp, $sp, 4
+				#$sp:($fpv)$fp:($x)($m)($p)
+	subu $sp, 4
+	sw $s0, 0($sp)
+	subu $sp, 4
+	sw $s1, 0($sp)
+	subu $sp, 4
+	sw $s2, 0($sp)
+				#$sp:($s2v)($s1v)($s0v)($fpv)$fp:($x)($m)($p)
+
+	lw $s0, 0($fp) #x	
+	lw $s1, 4($fp) #m
+	lw $s2, 8($fp) #p
+	
+	li $v0, 0
+	
+	li $t2, 1
+	rem $t3, $s0, $t2
+	li $t4, 0
+loop1:
+	bne $t3, $zero, iesire
+	mul $t2, $t2, $s1
+	rem $t3, $s0, $t2
+	addi $t4, $t4, 1
+	j loop1
+iesire:
+	subu $t4, $t4, 1
+
+	beq $t4, $s2, e_ok
+	li $v0, 0
+	j exit1
+e_ok:
+	li $v0, 1
+	j exit1
+exit1:
+	lw $s2, -16($fp)
+	lw $s1, -12($fp)
+	lw $s0, -8($fp)
+	lw $fp, -4($fp)
+	addu $sp, 16
+	jr $ra
